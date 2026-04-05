@@ -232,11 +232,11 @@ if config["peak_calling_macs2"]["run"]:
 
         rule plot_fraction_of_reads_in_peaks:
             input:
-                total_read_count=expand("results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
-                peak_read_count=expand("results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
+                total_read_count=expand("results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
+                peak_read_count=expand("results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
             output:
-                plot=report("results/plots/macs2_broad/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
-                csv="results/macs2_broad/fdr{fdr}/frip.csv",
+                plot=report("results/plots/macs2_narrow/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
+                csv="results/macs2_narrow/fdr{fdr}/frip.csv",
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
