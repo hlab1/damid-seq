@@ -68,6 +68,10 @@ rule all:
     input: 
         targets()
 
+rule print_info:
+    run:
+        print(data_type())
+
 # Save snakemake terminal output to log file
 time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 snake_log = f"logs/snakemake/{time}_snakemake.log"
