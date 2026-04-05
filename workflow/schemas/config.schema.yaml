@@ -152,8 +152,9 @@ properties:
       run:
         type: boolean
       mode:
-        type: string
-        enum: ["narrow", "broad"]
+        type: array
+        items:
+          type: string
       qvalue:
         type: number
         minimum: 0

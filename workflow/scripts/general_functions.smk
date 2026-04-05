@@ -29,42 +29,42 @@ def targets():
     
     if config["peak_calling_perl"]["run"]:
         TARGETS.extend([
-            expand("results/plots/peaks/fdr{fdr}/feature_distributions.pdf", fdr=fdr),
-            expand("results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", fdr=fdr),
-            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.annotated.txt", fdr=fdr, bg_sample=BG_SAMPLES),
-            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.geneIDs.txt", fdr=fdr,bg_sample=BG_SAMPLES),
-            expand("results/plots/peaks/fdr{fdr}/frip.pdf", fdr=fdr),
-            expand("results/peaks/fdr{fdr}/frip.csv", fdr=fdr),
+            expand("results/plots/peaks/fdr{fdr}/feature_distributions.pdf", fdr=find_peaks_fdr),
+            expand("results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", fdr=find_peaks_fdr),
+            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.annotated.txt", fdr=find_peaks_fdr, bg_sample=BG_SAMPLES),
+            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.geneIDs.txt", fdr=find_peaks_fdr,bg_sample=BG_SAMPLES),
+            expand("results/plots/peaks/fdr{fdr}/frip.pdf", fdr=find_peaks_fdr),
+            expand("results/peaks/fdr{fdr}/frip.csv", fdr=find_peaks_fdr),
             ])
         if config["consensus_peaks"]["enrichment_analysis"]["run"]:
             TARGETS.extend([
-                expand("results/plots/peaks/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=fdr, bg_sample=BG_SAMPLES, db=DBS),
+                expand("results/plots/peaks/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=find_peaks_fdr, bg_sample=BG_SAMPLES, db=DBS),
                 ])
     
     if config["peak_calling_macs2"]["run"]:
-        if config["peak_calling_macs2"]["mode"] == "narrow":
+        if "narrow" in config["peak_calling_macs2"]["mode"]:
             TARGETS.extend([
-                expand("results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", fdr=fdr),
-                expand("results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", fdr=fdr),
-                expand("results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=fdr, bg_sample=BG_SAMPLES),
-                expand("results/plots/macs2_narrow/fdr{fdr}/frip.pdf", fdr=fdr),
-                expand("results/macs2_narrow/fdr{fdr}/frip.csv", fdr=fdr),
+                expand("results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", fdr=macs2_narrow_fdr),
+                expand("results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", fdr=macs2_narrow_fdr),
+                expand("results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES),
+                expand("results/plots/macs2_narrow/fdr{fdr}/frip.pdf", fdr=macs2_narrow_fdr),
+                expand("results/macs2_narrow/fdr{fdr}/frip.csv", fdr=macs2_narrow_fdr),
                 ])
             if config["consensus_peaks"]["enrichment_analysis"]["run"]:
                 TARGETS.extend([
-                    expand("results/plots/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=fdr, bg_sample=BG_SAMPLES, db=DBS),
+                    expand("results/plots/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES, db=DBS),
                     ])
-        elif config["peak_calling_macs2"]["mode"] == "broad":
+        if "broad" in config["peak_calling_macs2"]["mode"]:
             TARGETS.extend([
-                expand("results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", fdr=fdr),
-                expand("results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", fdr=fdr),
-                expand("results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=fdr, bg_sample=BG_SAMPLES),
-                expand("results/plots/macs2_broad/fdr{fdr}/frip.pdf", fdr=fdr),
-                expand("results/macs2_broad/fdr{fdr}/frip.csv", fdr=fdr),
+                expand("results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", fdr=macs2_broad_fdr),
+                expand("results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", fdr=macs2_broad_fdr),
+                expand("results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES),
+                expand("results/plots/macs2_broad/fdr{fdr}/frip.pdf", fdr=macs2_broad_fdr),
+                expand("results/macs2_broad/fdr{fdr}/frip.csv", fdr=macs2_broad_fdr),
                 ])
             if config["consensus_peaks"]["enrichment_analysis"]["run"]:
                 TARGETS.extend([
-                     expand("results/plots/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=fdr, bg_sample=BG_SAMPLES, db=DBS),
+                     expand("results/plots/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES, db=DBS),
                     ])
     return TARGETS
 
@@ -76,7 +76,7 @@ def data_type():
     If they do match, each biological replicate will be in a separate subdirectory in reads/.
     """
     # Check if any subdirectories exist in reads/
-    subdirs = glob.glob("reads/*/*")
+    subdirs = glob.glob(f"reads/*/*")
     if len(subdirs) == 0:
         return "matrix"
     else:
@@ -418,16 +418,16 @@ def macs2_params():
     elif "dm" in resources.genome:
         genome = "dm"
     
-    if config["peak_calling_macs2"]["mode"] == "broad":
+    if "broad" in config["peak_calling_macs2"]["mode"]:
         cutoff = config["peak_calling_macs2"]["broad_cutoff"]
         broad = f"--broad --broad-cutoff {cutoff} "
         qvalue= ""
+        extra = config["peak_calling_macs2"]["broad_extra"]
     else:
         broad = ""
         qvalue = config["peak_calling_macs2"]["qvalue"]
         qvalue = f"-q {qvalue}"
-    
-    extra = config["peak_calling_macs2"]["extra"]
+        extra = config["peak_calling_macs2"]["narrow_extra"]
 
     return f"-f {format_} -g {genome} {qvalue} {broad} {extra}"
 

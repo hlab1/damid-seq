@@ -37,7 +37,7 @@ rule sort_peak_bed:
 # Create bed file of consensus peaks between replicate conditions
 rule consensus_peaks: # Escape bg_sample wildcard to get all replicate bg_samples
     input:
-        beds=expand("results/peaks/fdr{fdr}/{dir}/{{bg_sample}}.sorted.bed", fdr=fdr , dir=DIRS)
+        beds=expand("results/peaks/fdr{fdr}/{dir}/{{bg_sample}}.sorted.bed", fdr=find_peaks_fdr , dir=DIRS)
     output:
         "results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed"
     params:
@@ -56,7 +56,7 @@ rule consensus_peaks: # Escape bg_sample wildcard to get all replicate bg_sample
 rule filter_consensus_peaks:
     input:
         bed="results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed",
-        peaks=expand("results/peaks/fdr{fdr}/{dir}/{{bg_sample}}.sorted.bed", fdr=fdr , dir=DIRS),
+        peaks=expand("results/peaks/fdr{fdr}/{dir}/{{bg_sample}}.sorted.bed", fdr=find_peaks_fdr , dir=DIRS),
         cs=f"resources/{resources.genome}_chrom.sizes",
     output:
         "results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.filtered.bed",
@@ -188,8 +188,8 @@ if config["peak_calling_perl"]["run"]:
 
     rule plot_fraction_of_reads_in_peaks:
         input:
-            total_read_count=expand("results/peaks/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
-            peak_read_count=expand("results/peaks/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
+            total_read_count=expand("results/peaks/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=find_peaks_fdr, bg_sample=BG_SAMPLES),
+            peak_read_count=expand("results/peaks/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=find_peaks_fdr, bg_sample=BG_SAMPLES),
         output:
             plot=report("results/plots/peaks/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
             csv="results/peaks/fdr{fdr}/frip.csv",
