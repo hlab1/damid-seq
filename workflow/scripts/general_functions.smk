@@ -76,7 +76,7 @@ def data_type():
     If they do match, each biological replicate will be in a separate subdirectory in reads/.
     """
     # Check if any subdirectories exist in reads/
-    subdirs = glob.glob(f"reads/*/*")
+    subdirs = glob.glob(f"{config['reads_dir']}/*/*")
     if len(subdirs) == 0:
         return "matrix"
     else:
@@ -103,7 +103,7 @@ def matrix_samples():
             """
             log = []
             for i, l in enumerate(list_):
-                dir_ = f"reads/repl_{i + 1}"
+                dir_ = f"{config['reads_dir']}/repl_{i + 1}"
                 os.makedirs(dir_, exist_ok=True)
                 
                 # Keep log of what goes where
@@ -117,10 +117,10 @@ def matrix_samples():
             return log
     
         # Get all R1 files in reads/
-        r1 = glob.glob("reads/*_R1_001.fastq.gz")
+        r1 = glob.glob(f"{config['reads_dir']}/*_R1_001.fastq.gz")
 
         # Get all R1 Dam only files in reads/
-        dam = glob.glob("reads/*Dam*_R1_001.fastq.gz")
+        dam = glob.glob(f"{config['reads_dir']}/*Dam*_R1_001.fastq.gz")
 
         # Get all R1 Dam-POI files in reads/
         fusion = [f for f in r1 if f not in dam]
@@ -165,9 +165,9 @@ def matrix_samples():
         df["read2"] = log_r2
 
         # Save log data to csv
-        df.to_csv("reads/sample_matrix.csv", index=False)
+        df.to_csv(f"{config['reads_dir']}/sample_matrix.csv", index=False)
     else:
-        r1 = glob.glob(f"reads/*.fastq.gz")
+        r1 = glob.glob(f"{config['reads_dir']}/*.fastq.gz")
 
         # Get all R1 Dam only files in reads/
         dam = [f for f in r1 if "Dam" in f]
@@ -204,7 +204,7 @@ def matrix_samples():
                 """
                 log = []
                 for i, l in enumerate(list_):
-                    dir_ = f"reads/repl_{i + 1}"
+                    dir_ = f"{config['reads_dir']}/repl_{i + 1}"
                     os.makedirs(dir_, exist_ok=True)
                     
                     # Keep log of what goes where
@@ -224,14 +224,14 @@ def matrix_samples():
         df["dir"] = log_symlink
         
         # Save log data to csv
-        df.to_csv("reads/sample_matrix.csv", index=False)
+        df.to_csv(f"{config['reads_dir']}/sample_matrix.csv", index=False)
 
 
 def dirs():
     """
     Each dir contains one replicate sets of fastq files
     """
-    DIRS = glob.glob("reads/*")
+    DIRS = glob.glob(f"{config['reads_dir']}/*")
 
     # Omit any files as directories
     DIRS = [d for d in DIRS if Path(d).is_dir()]
@@ -265,8 +265,8 @@ def samples(bedgraph=False, dam=False):
     for sample in SAMPLES:
         for dir in DIRS:
             if paired_end:
-                r1= f"reads/{dir}/{sample}_R1_001.fastq.gz"
-                r2= f"reads/{dir}/{sample}_R2_001.fastq.gz"
+                r1= f"{config['reads_dir']}/{dir}/{sample}_R1_001.fastq.gz"
+                r2= f"{config['reads_dir']}/{dir}/{sample}_R2_001.fastq.gz"
                 if not os.path.isfile(r1):
                     if not os.path.islink(r1):
                         not_found.append(r1)
@@ -274,7 +274,7 @@ def samples(bedgraph=False, dam=False):
                     if not os.path.islink(r2):
                         not_found.append(r2)
             else:
-                r1= f"reads/{dir}/{sample}.fastq.gz"
+                r1= f"{config['reads_dir']}/{dir}/{sample}.fastq.gz"
                 if not os.path.isfile(r1):
                     if not os.path.islink(r1):
                         not_found.append(r1)
@@ -296,9 +296,9 @@ def paired_end():
     Checks if paired-end reads are used
     """
     # Get one fastq file
-    reads = glob.glob("reads/*/*fastq.gz")
+    reads = glob.glob(f"{config['reads_dir']}/*/*fastq.gz")
     if len(reads) == 0:
-        reads = glob.glob("reads/*fastq.gz")
+        reads = glob.glob(f"{config['reads_dir']}/*fastq.gz")
     assert len(reads) != 0, "No fastq files found..."
         
     fastq = reads[0]
@@ -472,8 +472,8 @@ def check_consensus_peak_settings():
     keep = config["consensus_peaks"]["keep"]
 
     # Get number of subdirectories in reads/
-    subdirs = glob.glob("reads/*")
+    subdirs = glob.glob(f"{config['reads_dir']}/*")
     subdirs = len([d for d in subdirs if os.path.isdir(d)])
 
     if keep > subdirs:
-        raise ValueError(f"Number of overlapping peaks to keep consensus peaks (config > consensus_peak > keep) is greater than number of subdirectories in reads/...")
+        raise ValueError(f"Number of overlapping peaks to keep consensus peaks (config > consensus_peak > keep) is greater than number of subdirectories in {config['reads_dir']}/...")

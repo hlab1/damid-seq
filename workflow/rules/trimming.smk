@@ -1,8 +1,8 @@
 if paired_end:
     rule trim_galore_pe:
         input:
-            r1="reads/{dir}/{sample}_R1_001.fastq.gz", 
-            r2="reads/{dir}/{sample}_R2_001.fastq.gz",
+            r1=f"{config['reads_dir']}/{{dir}}/{{sample}}_R1_001.fastq.gz", 
+            r2=f"{config['reads_dir']}/{{dir}}/{{sample}}_R2_001.fastq.gz",
         output:
             r1="results/trimmed/{dir}/{sample}_1.fastq.gz",
             r2="results/trimmed/{dir}/{sample}_2.fastq.gz",
@@ -22,7 +22,7 @@ if paired_end:
 else:
     rule trim_galore_se:
         input:
-            r1="reads/{dir}/{sample}.fastq.gz",
+            r1=f"{config['reads_dir']}/{{dir}}/{{sample}}.fastq.gz",
         output:
             r1="results/trimmed/{dir}/{sample}.fastq.gz",
             flag=touch("results/trimmed/{dir}/{sample}.flag"),
