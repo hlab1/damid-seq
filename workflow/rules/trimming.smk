@@ -1,12 +1,12 @@
 if paired_end:
     rule trim_galore_pe:
         input:
-            r1=f"{config['reads_dir']}/{{dir}}/{{sample}}_R1_001.fastq.gz", 
-            r2=f"{config['reads_dir']}/{{dir}}/{{sample}}_R2_001.fastq.gz",
+            r1="{analysis_dir}/reads/{dir}/{sample}_R1_001.fastq.gz", 
+            r2="{analysis_dir}/reads/{dir}/{sample}_R2_001.fastq.gz",
         output:
-            r1="results/trimmed/{dir}/{sample}_1.fastq.gz",
-            r2="results/trimmed/{dir}/{sample}_2.fastq.gz",
-            flag=touch("results/trimmed/{dir}/{sample}.flag"),
+            r1="{analysis_dir}/results/trimmed/{dir}/{sample}_1.fastq.gz",
+            r2="{analysis_dir}/results/trimmed/{dir}/{sample}_2.fastq.gz",
+            flag=touch("{analysis_dir}/results/trimmed/{dir}/{sample}.flag"),
         threads: config["resources"]["trim"]["cpu"],
         resources:
             runtime=config["resources"]["trim"]["time"],
@@ -14,7 +14,7 @@ if paired_end:
             paired=True,
             extra="--illumina -q 20",
         log:
-            "logs/trim_galore/{dir}/{sample}.log",
+            "{analysis_dir}/logs/trim_galore/{dir}/{sample}.log",
         conda:
             "../envs/trim.yaml"
         script:
@@ -22,10 +22,10 @@ if paired_end:
 else:
     rule trim_galore_se:
         input:
-            r1=f"{config['reads_dir']}/{{dir}}/{{sample}}.fastq.gz",
+            r1="{analysis_dir}/reads/{dir}/{sample}.fastq.gz",
         output:
-            r1="results/trimmed/{dir}/{sample}.fastq.gz",
-            flag=touch("results/trimmed/{dir}/{sample}.flag"),
+            r1="{analysis_dir}/results/trimmed/{dir}/{sample}.fastq.gz",
+            flag=touch("{analysis_dir}/results/trimmed/{dir}/{sample}.flag"),
         threads: config["resources"]["trim"]["cpu"],
         resources:
             runtime=config["resources"]["trim"]["time"],
@@ -33,7 +33,7 @@ else:
             paired=False,
             extra="--illumina -q 20",
         log:
-            "logs/trim_galore/{dir}/{sample}.log",
+            "{analysis_dir}/logs/trim_galore/{dir}/{sample}.log",
         conda:
             "../envs/trim.yaml"
         script:

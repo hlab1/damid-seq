@@ -1,8 +1,8 @@
 rule multiBigwigSummary_bedgraph:
     input:
-        expand("results/bigwig/{dir}/{bg_sample}.bw", dir=DIRS , bg_sample=BG_SAMPLES),
+        expand("{{analysis_dir}}/results/bigwig/{dir}/{bg_sample}.bw", dir=DIRS , bg_sample=BG_SAMPLES),
     output:
-        "results/deeptools/scores_per_bin.npz",
+        "{analysis_dir}/results/deeptools/scores_per_bin.npz",
     params:
         labels=lambda wildcards, input: [x.replace("results/bigwig/", "").replace(".bw","") for x in input],
         extra=""
@@ -10,7 +10,7 @@ rule multiBigwigSummary_bedgraph:
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/deeptools/multiBigwigSummary.log"
+        "{analysis_dir}/logs/deeptools/multiBigwigSummary.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -25,28 +25,28 @@ rule multiBigwigSummary_bedgraph:
 
 use rule multiBigwigSummary_bedgraph as multiBigwigSummary_bam with:
     input:
-        expand("results/bigwig/bam2bigwig/{dir}/{sample}.bw", dir=DIRS , sample=SAMPLES),
+        expand("{{analysis_dir}}/results/bigwig/bam2bigwig/{dir}/{sample}.bw", dir=DIRS , sample=SAMPLES),
     output:
-        "results/deeptools/scores_per_bin_bam.npz",
+        "{analysis_dir}/results/deeptools/scores_per_bin_bam.npz",
     params:
         labels=lambda wildcards, input: [x.replace("results/bigwig/bam2bigwig/", "").replace(".bw","") for x in input],
         extra=""
     log:
-        "logs/deeptools/multiBigwigSummary_bam.log"
+        "{analysis_dir}/logs/deeptools/multiBigwigSummary_bam.log"
 
 
 rule PCA_bedgraph:
     input:
-        "results/deeptools/scores_per_bin.npz",
+        "{analysis_dir}/results/deeptools/scores_per_bin.npz",
     output:
-        "results/deeptools/PCA.tab",
+        "{analysis_dir}/results/deeptools/PCA.tab",
     params:
         extra=""
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/deeptools/PCA.log"
+        "{analysis_dir}/logs/deeptools/PCA.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -60,26 +60,26 @@ rule PCA_bedgraph:
 
 use rule PCA_bedgraph as PCA_bam with:
     input:
-        "results/deeptools/scores_per_bin_bam.npz",
+        "{analysis_dir}/results/deeptools/scores_per_bin_bam.npz",
     output:
-        "results/deeptools/PCA_bam.tab",
+        "{analysis_dir}/results/deeptools/PCA_bam.tab",
     log:
-        "logs/deeptools/PCA_bam.log"
+        "{analysis_dir}/logs/deeptools/PCA_bam.log"
 
 
 rule computeMatrix:
     input:
-        bw=expand("results/bigwig/average_bw/{bg_sample}.bw", bg_sample=BG_SAMPLES),
+        bw=expand("{{analysis_dir}}/results/bigwig/average_bw/{bg_sample}.bw", bg_sample=BG_SAMPLES),
         gtf=resources.gtf,
     output:
-        mat="results/deeptools/average_bw_matrix.gz",
+        mat="{analysis_dir}/results/deeptools/average_bw_matrix.gz",
     params:
         args=computematrix_args(),
     threads: config["resources"]["deeptools"]["cpu"] * 5 # Otherwise it will take very long
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/deeptools/computeMatrix.log"
+        "{analysis_dir}/logs/deeptools/computeMatrix.log"
     conda:
         "../envs/deeptools.yaml"
     shell:

@@ -13,58 +13,59 @@ def targets():
     Returns file targets for rule all
     """
     # Base target files
+    analysis_dir = config['analysis_dir']
     TARGETS = [
-        "results/qc/multiqc/multiqc.html",
-        "results/plots/PCA.pdf",
-        "results/plots/PCA_bam.pdf",
-        "results/plots/scree.pdf",
-        "results/plots/scree_bam.pdf",
-        "results/plots/sample_correlation.pdf",
-        "results/plots/sample_correlation_bam.pdf",
-        "results/plots/heatmap.pdf",
-        "results/plots/profile_plot.pdf",
-        "results/plots/mapping_rates.pdf",
-        expand("results/bigwig_rev_log2/average_bw/{bg_sample}.bw", bg_sample=BG_SAMPLES),
+        expand("{analysis_dir}/results/qc/multiqc/multiqc.html",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/PCA.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/PCA_bam.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/scree.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/scree_bam.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/sample_correlation.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/sample_correlation_bam.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/heatmap.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/profile_plot.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/plots/mapping_rates.pdf",analysis_dir=analysis_dir),
+        expand("{analysis_dir}/results/bigwig_rev_log2/average_bw/{bg_sample}.bw",analysis_dir=analysis_dir,bg_sample=BG_SAMPLES),
         ]
     
     if config["peak_calling_perl"]["run"]:
         TARGETS.extend([
-            expand("results/plots/peaks/fdr{fdr}/feature_distributions.pdf", fdr=find_peaks_fdr),
-            expand("results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", fdr=find_peaks_fdr),
-            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.annotated.txt", fdr=find_peaks_fdr, bg_sample=BG_SAMPLES),
-            expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.geneIDs.txt", fdr=find_peaks_fdr,bg_sample=BG_SAMPLES),
-            expand("results/plots/peaks/fdr{fdr}/frip.pdf", fdr=find_peaks_fdr),
-            expand("results/peaks/fdr{fdr}/frip.csv", fdr=find_peaks_fdr),
+            expand("{analysis_dir}/results/plots/peaks/fdr{fdr}/feature_distributions.pdf", analysis_dir=analysis_dir,fdr=find_peaks_fdr),
+            expand("{analysis_dir}/results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", analysis_dir=analysis_dir,fdr=find_peaks_fdr),
+            expand("{analysis_dir}/results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.annotated.txt", analysis_dir=analysis_dir,fdr=find_peaks_fdr, bg_sample=BG_SAMPLES),
+            expand("{analysis_dir}/results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.geneIDs.txt", analysis_dir=analysis_dir,fdr=find_peaks_fdr,bg_sample=BG_SAMPLES),
+            expand("{analysis_dir}/results/plots/peaks/fdr{fdr}/frip.pdf", analysis_dir=analysis_dir,fdr=find_peaks_fdr),
+            expand("{analysis_dir}/results/peaks/fdr{fdr}/frip.csv", analysis_dir=analysis_dir,fdr=find_peaks_fdr),
             ])
         if config["consensus_peaks"]["enrichment_analysis"]["run"]:
             TARGETS.extend([
-                expand("results/plots/peaks/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=find_peaks_fdr, bg_sample=BG_SAMPLES, db=DBS),
+                expand("{analysis_dir}/results/plots/peaks/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", analysis_dir=analysis_dir,fdr=find_peaks_fdr, bg_sample=BG_SAMPLES, db=DBS),
                 ])
     
     if config["peak_calling_macs2"]["run"]:
         if "narrow" in config["peak_calling_macs2"]["mode"]:
             TARGETS.extend([
-                expand("results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", fdr=macs2_narrow_fdr),
-                expand("results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", fdr=macs2_narrow_fdr),
-                expand("results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES),
-                expand("results/plots/macs2_narrow/fdr{fdr}/frip.pdf", fdr=macs2_narrow_fdr),
-                expand("results/macs2_narrow/fdr{fdr}/frip.csv", fdr=macs2_narrow_fdr),
+                expand("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr),
+                expand("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr),
+                expand("{analysis_dir}/results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES),
+                expand("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/frip.pdf", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr),
+                expand("{analysis_dir}/results/macs2_narrow/fdr{fdr}/frip.csv", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr),
                 ])
             if config["consensus_peaks"]["enrichment_analysis"]["run"]:
                 TARGETS.extend([
-                    expand("results/plots/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES, db=DBS),
+                    expand("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", analysis_dir=analysis_dir,fdr=macs2_narrow_fdr, bg_sample=BG_SAMPLES, db=DBS),
                     ])
         if "broad" in config["peak_calling_macs2"]["mode"]:
             TARGETS.extend([
-                expand("results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", fdr=macs2_broad_fdr),
-                expand("results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", fdr=macs2_broad_fdr),
-                expand("results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt", fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES),
-                expand("results/plots/macs2_broad/fdr{fdr}/frip.pdf", fdr=macs2_broad_fdr),
-                expand("results/macs2_broad/fdr{fdr}/frip.csv", fdr=macs2_broad_fdr),
+                expand("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", analysis_dir=analysis_dir,fdr=macs2_broad_fdr),
+                expand("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", analysis_dir=analysis_dir,fdr=macs2_broad_fdr),
+                expand("{analysis_dir}/results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt", analysis_dir=analysis_dir,fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES),
+                expand("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/frip.pdf", analysis_dir=analysis_dir,fdr=macs2_broad_fdr),
+                expand("{analysis_dir}/results/macs2_broad/fdr{fdr}/frip.csv", analysis_dir=analysis_dir,fdr=macs2_broad_fdr),
                 ])
             if config["consensus_peaks"]["enrichment_analysis"]["run"]:
                 TARGETS.extend([
-                     expand("results/plots/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES, db=DBS),
+                     expand("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}/{db}.pdf", analysis_dir=analysis_dir,fdr=macs2_broad_fdr, bg_sample=BG_SAMPLES, db=DBS),
                     ])
     return TARGETS
 
@@ -167,7 +168,7 @@ def matrix_samples():
         # Save log data to csv
         df.to_csv(f"{reads_dir}/sample_matrix.csv", index=False)
     else:
-        r1_fullpath = glob.glob(f"{config['reads_dir']}/*.fastq.gz")
+        r1_fullpath = glob.glob(f"{config['analysis_dir']}/reads/*.fastq.gz")
         r1 = [os.path.basename(f) for f in r1_fullpath]
         
         # Get all R1 Dam only files in reads/
@@ -230,14 +231,14 @@ def matrix_samples():
         df["dir"] = log_symlink
         
         # Save log data to csv
-        df.to_csv(f"{config['reads_dir']}/sample_matrix.csv", index=False)
+        df.to_csv(f"{config['analysis_dir']}/reads/sample_matrix.csv", index=False)
 
 
 def dirs():
     """
     Each dir contains one replicate sets of fastq files
     """
-    DIRS = glob.glob(f"{config['reads_dir']}/*")
+    DIRS = glob.glob(f"{config['analysis_dir']}/reads/*")
 
     # Omit any files as directories
     DIRS = [d for d in DIRS if Path(d).is_dir()]
@@ -271,8 +272,8 @@ def samples(bedgraph=False, dam=False):
     for sample in SAMPLES:
         for dir in DIRS:
             if paired_end:
-                r1= f"{config['reads_dir']}/{dir}/{sample}_R1_001.fastq.gz"
-                r2= f"{config['reads_dir']}/{dir}/{sample}_R2_001.fastq.gz"
+                r1= f"{config['analysis_dir']}/reads/{dir}/{sample}_R1_001.fastq.gz"
+                r2= f"{config['analysis_dir']}/reads/{dir}/{sample}_R2_001.fastq.gz"
                 if not os.path.isfile(r1):
                     if not os.path.islink(r1):
                         not_found.append(r1)
@@ -280,7 +281,7 @@ def samples(bedgraph=False, dam=False):
                     if not os.path.islink(r2):
                         not_found.append(r2)
             else:
-                r1= f"{config['reads_dir']}/{dir}/{sample}.fastq.gz"
+                r1= f"{config['analysis_dir']}/reads/{dir}/{sample}.fastq.gz"
                 if not os.path.isfile(r1):
                     if not os.path.islink(r1):
                         not_found.append(r1)
@@ -302,9 +303,9 @@ def paired_end():
     Checks if paired-end reads are used
     """
     # Get one fastq file
-    reads = glob.glob(f"{config['reads_dir']}/*/*fastq.gz")
+    reads = glob.glob(f"{config['analysis_dir']}/reads/*/*fastq.gz")
     if len(reads) == 0:
-        reads = glob.glob(f"{config['reads_dir']}/*fastq.gz")
+        reads = glob.glob(f"{config['analysis_dir']}/reads/*fastq.gz")
     assert len(reads) != 0, "No fastq files found..."
         
     fastq = reads[0]
@@ -478,8 +479,8 @@ def check_consensus_peak_settings():
     keep = config["consensus_peaks"]["keep"]
 
     # Get number of subdirectories in reads/
-    subdirs = glob.glob(f"{config['reads_dir']}/*")
+    subdirs = glob.glob(f"{config['analysis_dir']}/reads/*")
     subdirs = len([d for d in subdirs if os.path.isdir(d)])
 
     if keep > subdirs:
-        raise ValueError(f"Number of overlapping peaks to keep consensus peaks (config > consensus_peak > keep) is greater than number of subdirectories in {config['reads_dir']}/...")
+        raise ValueError(f"Number of overlapping peaks to keep consensus peaks (config > consensus_peak > keep) is greater than number of subdirectories in {config['analysis_dir']}/reads/...")

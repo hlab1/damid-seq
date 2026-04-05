@@ -21,9 +21,9 @@ cwd = os.getcwd()
 
 # Get arguments from snakemake
 find_peaks = f"{cwd}/{snakemake.input['fp']}/find_peaks"
-bedgraph = f'{cwd}/{snakemake.input["bg"]}'
-gff = f'{cwd}/{snakemake.output["gff"]}'
-data = f'{cwd}/{snakemake.output["data"]}'
+bedgraph = snakemake.input["bg"]
+gff = snakemake.output["gff"]
+data = snakemake.output["data"]
 fdr = snakemake.params["fdr"]
 frac = snakemake.params["frac"]
 min_count = snakemake.params["mc"]
@@ -31,8 +31,8 @@ min_quant = snakemake.params["mq"]
 n = snakemake.params["n"]
 step = snakemake.params["step"]
 up = snakemake.params["up"]
-outdir = f'{cwd}/{snakemake.params["outdir"]}'
-log = f'{cwd}/{snakemake.log[0]}'
+outdir = snakemake.params["outdir"]
+log = snakemake.log[0]
 
 # Make and move to output dir
 os.makedirs(outdir, exist_ok=True)

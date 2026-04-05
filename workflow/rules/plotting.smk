@@ -1,16 +1,16 @@
 rule plotPCA_bedgraph:
     input:
-        "results/deeptools/PCA.tab",
+        "{analysis_dir}/results/deeptools/PCA.tab",
     output:
-        pca=report("results/plots/PCA.pdf", caption="../report/pca.rst", category="PCA"),
-        scree=report("results/plots/scree.pdf", caption="../report/scree.rst", category="PCA"),
+        pca=report("{analysis_dir}/results/plots/PCA.pdf", caption="../report/pca.rst", category="PCA"),
+        scree=report("{analysis_dir}/results/plots/scree.pdf", caption="../report/scree.rst", category="PCA"),
     params:
         extra=""
     threads: config["resources"]["plotting"]["cpu"]
     resources:
         runtime=config["resources"]["plotting"]["time"]
     log:
-        "logs/plotting/plotPCA.log"
+        "{analysis_dir}/logs/plotting/plotPCA.log"
     conda:
         "../envs/R.yaml"
     script:
@@ -19,27 +19,27 @@ rule plotPCA_bedgraph:
 
 use rule plotPCA_bedgraph as plotPCA_bam with:
     input:
-        "results/deeptools/PCA_bam.tab",
+        "{analysis_dir}/results/deeptools/PCA_bam.tab",
     output:
-        pca=report("results/plots/PCA_bam.pdf", caption="../report/pca.rst", category="PCA"),
-        scree=report("results/plots/scree_bam.pdf", caption="../report/scree.rst", category="PCA"),
+        pca=report("{analysis_dir}/results/plots/PCA_bam.pdf", caption="../report/pca.rst", category="PCA"),
+        scree=report("{analysis_dir}/results/plots/scree_bam.pdf", caption="../report/scree.rst", category="PCA"),
     log:
-        "logs/plotting/plotPCA_bam.log"
+        "{analysis_dir}/logs/plotting/plotPCA_bam.log"
 
 
 rule plot_correlation_bedgraph:
     input:
-        "results/deeptools/scores_per_bin.npz"
+        "{analysis_dir}/results/deeptools/scores_per_bin.npz"
     output:
-        tab="results/deeptools/correlation.tab",
-        pdf=report("results/plots/sample_correlation.pdf", caption="../report/correlation.rst", category="Sample correlation"),
+        tab="{analysis_dir}/results/deeptools/correlation.tab",
+        pdf=report("{analysis_dir}/results/plots/sample_correlation.pdf", caption="../report/correlation.rst", category="Sample correlation"),
     params:
         extra=""
     threads: config["resources"]["deeptools"]["cpu"]
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/plotting/plotCorrelation.log"
+        "{analysis_dir}/logs/plotting/plotCorrelation.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -57,20 +57,20 @@ rule plot_correlation_bedgraph:
 
 use rule plot_correlation_bedgraph as plot_correlation_bam with:
     input:
-        "results/deeptools/scores_per_bin_bam.npz",
+        "{analysis_dir}/results/deeptools/scores_per_bin_bam.npz",
     output:
-        tab="results/deeptools/correlation_bam.tab",
-        pdf=report("results/plots/sample_correlation_bam.pdf", caption="../report/correlation.rst", category="Sample correlation"),
+        tab="{analysis_dir}/results/deeptools/correlation_bam.tab",
+        pdf=report("{analysis_dir}/results/plots/sample_correlation_bam.pdf", caption="../report/correlation.rst", category="Sample correlation"),
     log:
-        "logs/plotting/plotCorrelation_bam.log"
+        "{analysis_dir}/logs/plotting/plotCorrelation_bam.log"
     
 
 rule plot_heatmap:
     input:
-        mat="results/deeptools/average_bw_matrix.gz",
+        mat="{analysis_dir}/results/deeptools/average_bw_matrix.gz",
     output:
-        pdf=report("results/plots/heatmap.pdf", caption="../report/heatmap.rst", category="Heatmap"),
-        mat="results/deeptools/heatmap_matrix.gz",
+        pdf=report("{analysis_dir}/results/plots/heatmap.pdf", caption="../report/heatmap.rst", category="Heatmap"),
+        mat="{analysis_dir}/results/deeptools/heatmap_matrix.gz",
     params:
         im=config["deeptools"]["plotHeatmap"]["interpolationMethod"],
         pt=config["deeptools"]["plotHeatmap"]["plotType"],
@@ -81,7 +81,7 @@ rule plot_heatmap:
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/deeptools/plotHeatmap.log"
+        "{analysis_dir}/logs/deeptools/plotHeatmap.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -97,9 +97,9 @@ rule plot_heatmap:
 
 rule plot_profile:
     input:
-        mat="results/deeptools/average_bw_matrix.gz",
+        mat="{analysis_dir}/results/deeptools/average_bw_matrix.gz",
     output:
-        pdf=report("results/plots/profile_plot.pdf", caption="../report/profile_plot.rst", category="Profile plot"),
+        pdf=report("{analysis_dir}/results/plots/profile_plot.pdf", caption="../report/profile_plot.rst", category="Profile plot"),
     params:
         rl = computematrix_args(region_labels=True),
         extra="",
@@ -107,7 +107,7 @@ rule plot_profile:
     resources:
         runtime=config["resources"]["deeptools"]["time"]
     log:
-        "logs/deeptools/plotProfile.log"
+        "{analysis_dir}/logs/deeptools/plotProfile.log"
     conda:
         "../envs/deeptools.yaml"
     shell:
@@ -121,21 +121,21 @@ rule plot_profile:
         "> {log} 2>&1"
 
 if config["peak_calling_perl"]["run"]:
-    fdr = config["peak_calling_perl"]["fdr"]
+
     rule peak_annotation_plots:
         input:
             gtf=resources.gtf,
-            bed=expand("results/peaks/fdr{fdr}/consensus_peaks/{bg_sample}.filtered.bed", fdr=fdr, bg_sample=BG_SAMPLES),
+            bed=expand("{{analysis_dir}}/results/peaks/fdr{{fdr}}/consensus_peaks/{bg_sample}.filtered.bed", bg_sample=BG_SAMPLES),
         output:
-            fd=report("results/plots/peaks/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
-            dt=report("results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
+            fd=report("{analysis_dir}/results/plots/peaks/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
+            dt=report("{analysis_dir}/results/plots/peaks/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
         params:
             extra="",
         threads: config["resources"]["plotting"]["cpu"]
         resources:
             runtime=config["resources"]["plotting"]["time"]
         log:
-            "logs/plotting/peak_annotation_plots_fdr{fdr}.log"
+            "{analysis_dir}/logs/plotting/peak_annotation_plots_fdr{fdr}.log"
         conda:
             "../envs/R.yaml"
         script:
@@ -143,41 +143,41 @@ if config["peak_calling_perl"]["run"]:
 
 elif config["peak_calling_macs2"]["run"]:
     if config["peak_calling_macs2"]["mode"] == "narrow":
-        fdr = config["peak_calling_macs2"]["qvalue"]
+
         rule peak_annotation_plots:
             input:
                 gtf=resources.gtf,
-                bed=expand("results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.filtered.bed", fdr=fdr, bg_sample=BG_SAMPLES),
+                bed=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/consensus_peaks/{bg_sample}.filtered.bed", bg_sample=BG_SAMPLES),
             output:
-                fd=report("results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
-                dt=report("results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
+                fd=report("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
+                dt=report("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plotting/peak_annotation_plots_fdr{fdr}_macs2_narrow.log"
+                "{analysis_dir}/logs/plotting/peak_annotation_plots_fdr{fdr}_macs2_narrow.log"
             conda:
                 "../envs/R.yaml"
             script:
                 "../scripts/peak_annotation_plots.R"
     elif config["peak_calling_macs2"]["mode"] == "broad":
-        fdr = config["peak_calling_macs2"]["broad_cutoff"]
+
         rule peak_annotation_plots:
             input:
                 gtf=resources.gtf,
-                bed=expand("results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.filtered.bed", fdr=fdr, bg_sample=BG_SAMPLES),
+                bed=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/consensus_peaks/{bg_sample}.filtered.bed", bg_sample=BG_SAMPLES),
             output:
-                fd=report("results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
-                dt=report("results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
+                fd=report("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation"),
+                dt=report("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation"),
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plotting/peak_annotation_plots_fdr{fdr}_macs2_broad.log"
+                "{analysis_dir}/logs/plotting/peak_annotation_plots_fdr{fdr}_macs2_broad.log"
             conda:
                 "../envs/R.yaml"
             script:
@@ -185,16 +185,16 @@ elif config["peak_calling_macs2"]["run"]:
 
 rule plot_mapping_rates:
     input:
-        log=expand("logs/damidseq_pipeline/{dir}/damidseq_pipeline.log", dir=DIRS),
+        log=expand("{{analysis_dir}}/logs/damidseq_pipeline/{dir}/damidseq_pipeline.log", dir=DIRS),
     output:
-        pdf=report("results/plots/mapping_rates.pdf", caption="../report/mapping_rates.rst", category="Mapping rates"),
+        pdf=report("{analysis_dir}/results/plots/mapping_rates.pdf", caption="../report/mapping_rates.rst", category="Mapping rates"),
     params:
         extra="",
     threads: config["resources"]["plotting"]["cpu"]
     resources:
         runtime=config["resources"]["plotting"]["time"]
     log:
-        "logs/plotting/plot_mapping_rates.log"
+        "{analysis_dir}/logs/plotting/plot_mapping_rates.log"
     conda:
         "../envs/R.yaml"
     script:

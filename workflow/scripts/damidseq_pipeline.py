@@ -18,7 +18,7 @@ def move_files(extension):
     """Move files to appropriate locations
     """
     # Create output directory for requested file type
-    out_dir = os.path.join(cwd, f"results/{extension}/{directory}")
+    out_dir = f"{results_dir}/{extension}/{directory}"
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     
@@ -40,6 +40,8 @@ def allfastq(directory):
 cwd = os.getcwd()
 
 # Load Snakemake variables
+results_dir = snakemake.params["results_dir"]
+logs_dir = snakemake.params["logs_dir"]
 trim_dir = snakemake.params["trim_dir"]
 flags = snakemake.input["flag"]
 gatc = os.path.join(cwd, snakemake.input["gatc"])
@@ -49,6 +51,7 @@ threads = snakemake.threads
 bins = snakemake.params["binsize"]
 normalization_method = snakemake.params["normalization_method"]
 extra = snakemake.params["extra"]
+samples_csv = snakemake.params["samples_csv"]
 
 # Get sample directory
 directory = list(set([os.path.basename(os.path.dirname(x)) for x in flags]))
@@ -59,7 +62,7 @@ directory = directory[0]
 damidseq_pipeline = os.path.join(cwd,"resources/damidseq_pipeline/damidseq_pipeline")
 
 # Load sample table
-csv = pd.read_csv("config/samples.csv")
+csv = pd.read_csv(samples_csv)
 
 # Check if treatment column contains any NaN values, if so replace with "none"
 if csv["treatment"].isnull().values.any():
@@ -79,11 +82,11 @@ for c in conditions:
     dam_controls[c] = csv[csv["sample"].str.contains("Dam") & csv["condition"].str.contains(c)]["sample"].tolist()[0]
 
 # Get all fastq files
-all_fastq = allfastq(f"results/{trim_dir}/{directory}/")
+all_fastq = allfastq(f"{results_dir}/{trim_dir}/{directory}/")
 
 # Run damidseq_pipeline for each condition
 for condition, dam_control in dam_controls.items():
-    print(f"Analysing data in results/trimmed/{directory}...\nUsing {dam_control} as control")
+    print(f"Analysing data in {results_dir}/trimmed/{directory}...\nUsing {dam_control} as control")
     
     # Create temporary directory and move there
     temp_dir = tempfile.TemporaryDirectory()
@@ -121,7 +124,7 @@ for condition, dam_control in dam_controls.items():
 
     print("Moving output files from temporary directory to appropriate locations")
     # Move log file to logs directory
-    target = os.path.join(cwd, f"logs/damidseq_pipeline/{directory}")
+    target = f"{logs_dir}/damidseq_pipeline/{directory}"
     shell(
         "mv pipeline-*.log {target}"
         )
@@ -136,7 +139,7 @@ for condition, dam_control in dam_controls.items():
     os.chdir(cwd)
     
     # Rename bedgraph files so that normalization method is not included in file name
-    bedgraphs = glob.glob(f"results/bedgraph/{directory}/*.bedgraph")
+    bedgraphs = glob.glob(f"{results_dir}/bedgraph/{directory}/*.bedgraph")
     assert len(bedgraphs) > 0, "No bedgraph files found to rename..."
     for bedgraph in bedgraphs:
         new_name = bedgraph.replace(f".{normalization_method}-norm.gatc.bedgraph", "-norm.gatc.bedgraph")
@@ -145,7 +148,7 @@ for condition, dam_control in dam_controls.items():
     
     if not paired:
         # Rename bam files so that they end with .bam and not -ext300.bam
-        bam_files = glob.glob(f"results/bam/{directory}/*-ext300.bam")
+        bam_files = glob.glob(f"{results_dir}/bam/{directory}/*-ext300.bam")
         assert len(bam_files) > 0, "No single-end bam files found to remove -ext300 from file name..."
         for bam in bam_files:
             new_name = bam.replace("-ext300", "")
@@ -153,7 +156,7 @@ for condition, dam_control in dam_controls.items():
     
     # Remove all trimmed fastq files
     #shell(
-    #    "rm results/trimmed/{directory}/*.fastq.gz"
+    #    "rm {results_dir}/trimmed/{directory}/*.fastq.gz"
     #    )
     
     # Destroy temporary directory

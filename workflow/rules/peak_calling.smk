@@ -1,13 +1,13 @@
 if config["peak_calling_perl"]["run"]:
-    fdr = config["peak_calling_perl"]["fdr"]
-    find_peaks_fdr = fdr
+    find_peaks_fdr = config["peak_calling_perl"]["fdr"]
+
     rule peak_calling_perl:
         input:
             fp="resources/find_peaks",
-            bg="results/bedgraph/{dir}/{bg_sample}-vs-Dam-norm.gatc.bedgraph",
+            bg="{analysis_dir}/results/bedgraph/{dir}/{bg_sample}-vs-Dam-norm.gatc.bedgraph",
         output:
-            gff="results/peaks/fdr{fdr}/{dir}/{bg_sample}.peaks.gff",
-            data="results/peaks/fdr{fdr}/{dir}/{bg_sample}.data",
+            gff="{analysis_dir}/results/peaks/fdr{fdr}/{dir}/{bg_sample}.peaks.gff",
+            data="{analysis_dir}/results/peaks/fdr{fdr}/{dir}/{bg_sample}.data",
         params:
             outdir=lambda w, output: os.path.dirname(output["gff"]),
             n=config["peak_calling_perl"]["iterations"],
@@ -23,20 +23,19 @@ if config["peak_calling_perl"]["run"]:
         conda:
             "../envs/peak_calling.yaml"
         log:
-            "logs/find_peaks/fdr{fdr}/{dir}/{bg_sample}.log"
+            "{analysis_dir}/logs/find_peaks/fdr{fdr}/{dir}/{bg_sample}.log"
         script:
             "../scripts/run_find_peaks.py"
 
 if config["peak_calling_macs2"]["run"]:
     if "narrow" in config["peak_calling_macs2"]["mode"]:
-        fdr = config["peak_calling_macs2"]["qvalue"]
-        macs2_narrow_fdr = fdr
+        macs2_narrow_fdr = config["peak_calling_macs2"]["qvalue"]
         
         rule peak_calling_MACS2_narrow:
             input:
-                bam="results/bam/{dir}/{bg_sample}.bam",
+                bam="{analysis_dir}/results/bam/{dir}/{bg_sample}.bam",
             output:
-                multiext("results/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}",
+                multiext("{analysis_dir}/results/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}",
                         "_peaks.xls",
                         "_peaks.narrowPeak",
                         "_summits.bed"
@@ -45,7 +44,7 @@ if config["peak_calling_macs2"]["run"]:
                 outdir=lambda w, output: os.path.dirname(output[0]),
                 paired_end=paired_end,
                 mode="narrow",
-                fdr=fdr,
+                fdr=macs2_narrow_fdr,
                 genome=resources.genome,
                 data_dir=lambda w, input: os.path.dirname(input[0]),
                 extra=config["peak_calling_macs2"]["narrow_extra"]
@@ -53,7 +52,7 @@ if config["peak_calling_macs2"]["run"]:
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}.log"
+                "{analysis_dir}/logs/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             script:
@@ -62,16 +61,16 @@ if config["peak_calling_macs2"]["run"]:
 
         rule consensus_peaks_macs2_narrow:
             input: 
-                peaks=expand("results/macs2_narrow/fdr{fdr}/{dir}/{{bg_sample}}_peaks.narrowPeak", dir=DIRS, fdr=fdr),
+                peaks=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/{dir}/{{bg_sample}}_peaks.narrowPeak", dir=DIRS),
             output:
-                "results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed"
+                "{analysis_dir}/results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed"
             params:
                 extra=""
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/consensus_peaks_macs2_narrow/fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/consensus_peaks_macs2_narrow/fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             shell:
@@ -80,11 +79,11 @@ if config["peak_calling_macs2"]["run"]:
 
         rule filter_consensus_peaks_macs2_narrow:
             input:
-                bed="results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed",
-                peaks=expand("results/macs2_narrow/fdr{fdr}/{dir}/{{bg_sample}}_peaks.narrowPeak", dir=DIRS, fdr=fdr),
+                bed="{analysis_dir}/results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed",
+                peaks=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/{dir}/{{bg_sample}}_peaks.narrowPeak", dir=DIRS),
                 cs=f"resources/{resources.genome}_chrom.sizes",
             output:
-                ext_bed="results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
+                ext_bed="{analysis_dir}/results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
             params:
                 k=config["consensus_peaks"]["keep"],
                 max_size=config["consensus_peaks"]["max_size"],
@@ -93,7 +92,7 @@ if config["peak_calling_macs2"]["run"]:
             resources:
                 runtime=15
             log:
-                "logs/filter_consensus_peaks/macs2_narrow/fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/filter_consensus_peaks/macs2_narrow/fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             script:
@@ -103,17 +102,17 @@ if config["peak_calling_macs2"]["run"]:
         rule peak_annotation_plots_macs2_narrow:
             input:
                 gtf=resources.gtf,
-                bed=expand("results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed", fdr=fdr,bg_sample=BG_SAMPLES),
+                bed=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/consensus_peaks/{bg_sample}.overlap.filtered.bed", bg_sample=BG_SAMPLES),
             output:
-                fd=report("results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation MACS2 narrow"),
-                dt=report("results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation MACS2 narrow"),
+                fd=report("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation MACS2 narrow"),
+                dt=report("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation MACS2 narrow"),
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plotting/macs2_narrow_peak_annotation_plots/fdr{fdr}.log"
+                "{analysis_dir}/logs/plotting/macs2_narrow_peak_annotation_plots/fdr{fdr}.log"
             conda:
                 "../envs/R.yaml"
             script:
@@ -122,15 +121,15 @@ if config["peak_calling_macs2"]["run"]:
 
         rule annotate_peaks_macs_narrow:
             input:
-                bed="results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
+                bed="{analysis_dir}/results/macs2_narrow/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
                 adb=f"resources/{resources.genome}_{resources.build}_annotation.Rdata",
                 gtf=resources.gtf,
             output:
-                txt=report("results/macs2_narrow/fdr{fdr}/{bg_sample}.annotated.txt", caption="../report/annotated_peaks.rst", category="Annotated peaks MACS2 narrow"),
+                txt=report("{analysis_dir}/results/macs2_narrow/fdr{fdr}/{bg_sample}.annotated.txt", caption="../report/annotated_peaks.rst", category="Annotated peaks MACS2 narrow"),
             params:
                 extra=""
             log:
-                "logs/annotate_peaks_macs2_narrow/fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/annotate_peaks_macs2_narrow/fdr{fdr}/{bg_sample}.log"
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
@@ -142,14 +141,14 @@ if config["peak_calling_macs2"]["run"]:
 
         rule get_gene_names_macs2_narrow:
             input:
-                txt="results/macs2_narrow/fdr{fdr}/{bg_sample}.annotated.txt"
+                txt="{analysis_dir}/results/macs2_narrow/fdr{fdr}/{bg_sample}.annotated.txt"
             output:
-                ids="results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt"
+                ids="{analysis_dir}/results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt"
             threads: 1
             resources:
                 runtime=5
             log:
-                "logs/geneIDs_peaks_macs2_narrow_fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/geneIDs_peaks_macs2_narrow_fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/deeptools.yaml"
             shell:
@@ -162,9 +161,9 @@ if config["peak_calling_macs2"]["run"]:
         if config["consensus_peaks"]["enrichment_analysis"]["run"]:
             rule enrichment_analysis_macs2_narrow:
                 input:
-                    txt="results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt",
+                    txt="{analysis_dir}/results/macs2_narrow/fdr{fdr}/{bg_sample}.geneIDs.txt",
                 output:
-                    xlsx="results/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
+                    xlsx="{analysis_dir}/results/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
                 params:
                     extra="",
                     genome=resources.genome,
@@ -173,7 +172,7 @@ if config["peak_calling_macs2"]["run"]:
                 resources:
                     runtime=config["resources"]["deeptools"]["time"]
                 log:
-                    "logs/enrichment_analysis/macs2_narrow/fdr{fdr}/{bg_sample}.log"
+                    "{analysis_dir}/logs/enrichment_analysis/macs2_narrow/fdr{fdr}/{bg_sample}.log"
                 conda:
                     "../envs/R.yaml"
                 script:
@@ -181,9 +180,9 @@ if config["peak_calling_macs2"]["run"]:
 
             rule plot_enrichment_macs2_narrow:
                 input:
-                    xlsx="results/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
+                    xlsx="{analysis_dir}/results/macs2_narrow/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
                 output:
-                    plots=report(expand("results/plots/macs2_narrow/fdr{{fdr}}/enrichment_analysis/{{bg_sample}}/{db}.pdf", db=DBS), caption="../report/enrichment_analysis.rst", category="Pathway enrichment analysis"),
+                    plots=report(expand("{analysis_dir}/results/plots/macs2_narrow/fdr{{fdr}}/enrichment_analysis/{{bg_sample}}/{db}.pdf", db=DBS), caption="../report/enrichment_analysis.rst", category="Pathway enrichment analysis"),
                 params:
                     terms=config["consensus_peaks"]["enrichment_analysis"]["terms"],
                     dirname=lambda w, output: os.path.dirname(output[0]),
@@ -191,7 +190,7 @@ if config["peak_calling_macs2"]["run"]:
                 resources:
                     runtime=config["resources"]["plotting"]["time"]
                 log:
-                    "logs/plot_enrichment/macs2_narrow/fdr{fdr}/{bg_sample}.log"
+                    "{analysis_dir}/logs/plot_enrichment/macs2_narrow/fdr{fdr}/{bg_sample}.log"
                 conda:
                     "../envs/R.yaml"
                 script:
@@ -201,18 +200,18 @@ if config["peak_calling_macs2"]["run"]:
         rule count_reads_in_peaks_macs2_narrow:
         # Adapted from https://www.biostars.org/p/337872/#337890
             input:
-                bam="results/bam/{dir}/{bg_sample}.bam",
-                b="results/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}_peaks.narrowPeak",
+                bam="{analysis_dir}/results/bam/{dir}/{bg_sample}.bam",
+                b="{analysis_dir}/results/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}_peaks.narrowPeak",
             output:
-                total_read_count="results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count",
-                peak_read_count="results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count",
+                total_read_count="{analysis_dir}/results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count",
+                peak_read_count="{analysis_dir}/results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count",
             params:
                 extra="",
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/bedtools_intersect/fdr{fdr}/{dir}/{bg_sample}.log"
+                "{analysis_dir}/logs/bedtools_intersect/fdr{fdr}/{dir}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             shell:
@@ -234,32 +233,31 @@ if config["peak_calling_macs2"]["run"]:
 
         rule plot_fraction_of_reads_in_peaks_macs2_narrow:
             input:
-                total_read_count=expand("results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
-                peak_read_count=expand("results/macs2_narrow/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
+                total_read_count=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, bg_sample=BG_SAMPLES),
+                peak_read_count=expand("{{analysis_dir}}/results/macs2_narrow/fdr{{fdr}}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, bg_sample=BG_SAMPLES),
             output:
-                plot=report("results/plots/macs2_narrow/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
-                csv="results/macs2_narrow/fdr{fdr}/frip.csv",
+                plot=report("{analysis_dir}/results/plots/macs2_narrow/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
+                csv="{analysis_dir}/results/macs2_narrow/fdr{fdr}/frip.csv",
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plot_frip/fdr{fdr}.log"
+                "{analysis_dir}/logs/plot_frip/fdr{fdr}.log"
             conda:
                 "../envs/R.yaml"
             script:
                 "../scripts/plot_frip.R"
     
     if "broad" in config["peak_calling_macs2"]["mode"]:
-        fdr = config["peak_calling_macs2"]["broad_cutoff"]
-        macs2_broad_fdr = fdr
+        macs2_broad_fdr = config["peak_calling_macs2"]["broad_cutoff"]
 
         rule peak_calling_MACS2_broad:
             input:
-                bam="results/bam/{dir}/{bg_sample}.bam",
+                bam="{analysis_dir}/results/bam/{dir}/{bg_sample}.bam",
             output:
-                multiext("results/macs2_broad/fdr{fdr}/{dir}/{bg_sample}",
+                multiext("{analysis_dir}/results/macs2_broad/fdr{fdr}/{dir}/{bg_sample}",
                         "_peaks.xls",
                         "_peaks.broadPeak",
                         "_peaks.gappedPeak"
@@ -268,7 +266,7 @@ if config["peak_calling_macs2"]["run"]:
                 outdir=lambda w, output: os.path.dirname(output[0]),
                 paired_end=paired_end,
                 mode="broad",
-                fdr=fdr,
+                fdr=macs2_broad_fdr,
                 genome=resources.genome,
                 data_dir=lambda w, input: os.path.dirname(input[0]),
                 extra=config["peak_calling_macs2"]["broad_extra"]
@@ -276,7 +274,7 @@ if config["peak_calling_macs2"]["run"]:
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/macs2_broad/fdr{fdr}/{dir}/{bg_sample}.log"
+                "{analysis_dir}/logs/macs2_broad/fdr{fdr}/{dir}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             script:
@@ -285,16 +283,16 @@ if config["peak_calling_macs2"]["run"]:
 
         rule consensus_peaks_macs2_broad:
             input: 
-                peaks=expand("results/macs2_broad/fdr{fdr}/{dir}/{{bg_sample}}_peaks.broadPeak", dir=DIRS, fdr=fdr),
+                peaks=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/{dir}/{{bg_sample}}_peaks.broadPeak", dir=DIRS),
             output:
-                "results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed"
+                "{analysis_dir}/results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed"
             params:
                 extra=""
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/consensus_peaks_macs2_broad/fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/consensus_peaks_macs2_broad/fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             shell:
@@ -303,11 +301,11 @@ if config["peak_calling_macs2"]["run"]:
         
         rule filter_consensus_peaks_macs2_broad:
             input:
-                bed="results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed",
-                peaks=expand("results/macs2_broad/fdr{fdr}/{dir}/{{bg_sample}}_peaks.broadPeak", dir=DIRS, fdr=fdr),
+                bed="{analysis_dir}/results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.bed",
+                peaks=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/{dir}/{{bg_sample}}_peaks.broadPeak", dir=DIRS),
                 cs=f"resources/{resources.genome}_chrom.sizes",
             output:
-                ext_bed="results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
+                ext_bed="{analysis_dir}/results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
             params:
                 k=config["consensus_peaks"]["keep"],
                 max_size=config["consensus_peaks"]["max_size"],
@@ -316,7 +314,7 @@ if config["peak_calling_macs2"]["run"]:
             resources:
                 runtime=15
             log:
-                "logs/filter_consensus_peaks/macs2_broad/fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/filter_consensus_peaks/macs2_broad/fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             script:
@@ -326,17 +324,17 @@ if config["peak_calling_macs2"]["run"]:
         rule peak_annotation_plots_macs2_broad:
             input:
                 gtf=resources.gtf,
-                bed=expand("results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed", fdr=fdr,bg_sample=BG_SAMPLES),
+                bed=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/consensus_peaks/{bg_sample}.overlap.filtered.bed", bg_sample=BG_SAMPLES),
             output:
-                fd=report("results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation MACS2 broad"),
-                dt=report("results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation MACS2 broad"),
+                fd=report("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/feature_distributions.pdf", caption="../report/feature_distributions.rst", category="Peak annotation MACS2 broad"),
+                dt=report("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/distance_to_tss.pdf", caption="../report/distance_to_tss.rst", category="Peak annotation MACS2 broad"),
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plotting/macs2_broad_peak_annotation_plots_fdr{fdr}.log"
+                "{analysis_dir}/logs/plotting/macs2_broad_peak_annotation_plots_fdr{fdr}.log"
             conda:
                 "../envs/R.yaml"
             script:
@@ -345,15 +343,15 @@ if config["peak_calling_macs2"]["run"]:
         
         rule annotate_peaks_macs_broad:
             input:
-                bed="results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
+                bed="{analysis_dir}/results/macs2_broad/fdr{fdr}/consensus_peaks/{bg_sample}.overlap.filtered.bed",
                 adb=f"resources/{resources.genome}_{resources.build}_annotation.Rdata",
                 gtf=resources.gtf,
             output:
-                txt=report("results/macs2_broad/fdr{fdr}/{bg_sample}.annotated.txt", caption="../report/annotated_peaks.rst", category="Annotated peaks MACS2 broad"),
+                txt=report("{analysis_dir}/results/macs2_broad/fdr{fdr}/{bg_sample}.annotated.txt", caption="../report/annotated_peaks.rst", category="Annotated peaks MACS2 broad"),
             params:
                 extra=""
             log:
-                "logs/annotate_peaks_macs2_broad_fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/annotate_peaks_macs2_broad_fdr{fdr}/{bg_sample}.log"
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
@@ -365,14 +363,14 @@ if config["peak_calling_macs2"]["run"]:
 
         rule get_gene_names_macs2_broad:
             input:
-                txt="results/macs2_broad/fdr{fdr}/{bg_sample}.annotated.txt"
+                txt="{analysis_dir}/results/macs2_broad/fdr{fdr}/{bg_sample}.annotated.txt"
             output:
-                ids="results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt"
+                ids="{analysis_dir}/results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt"
             threads: 1
             resources:
                 runtime=5
             log:
-                "logs/geneIDs_peaks_macs2_broad_fdr{fdr}/{bg_sample}.log"
+                "{analysis_dir}/logs/geneIDs_peaks_macs2_broad_fdr{fdr}/{bg_sample}.log"
             conda:
                 "../envs/deeptools.yaml"
             shell:
@@ -385,9 +383,9 @@ if config["peak_calling_macs2"]["run"]:
         if config["consensus_peaks"]["enrichment_analysis"]["run"]:
             rule enrichment_analysis_macs2_broad:
                 input:
-                    txt="results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt",
+                    txt="{analysis_dir}/results/macs2_broad/fdr{fdr}/{bg_sample}.geneIDs.txt",
                 output:
-                    xlsx="results/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
+                    xlsx="{analysis_dir}/results/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
                 params:
                     extra="",
                     genome=resources.genome,
@@ -396,7 +394,7 @@ if config["peak_calling_macs2"]["run"]:
                 resources:
                     runtime=config["resources"]["deeptools"]["time"]
                 log:
-                    "logs/enrichment_analysis/macs2_broad/fdr{fdr}/{bg_sample}.log"
+                    "{analysis_dir}/logs/enrichment_analysis/macs2_broad/fdr{fdr}/{bg_sample}.log"
                 conda:
                     "../envs/R.yaml"
                 script:
@@ -405,9 +403,9 @@ if config["peak_calling_macs2"]["run"]:
             
             rule plot_enrichment_macs2_broad:
                 input:
-                    xlsx="results/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
+                    xlsx="{analysis_dir}/results/macs2_broad/fdr{fdr}/enrichment_analysis/{bg_sample}.xlsx",
                 output:
-                    plots=report(expand("results/plots/macs2_broad/fdr{{fdr}}/enrichment_analysis/{{bg_sample}}/{db}.pdf", db=DBS), caption="../report/enrichment_analysis.rst", category="Pathway enrichment analysis"),
+                    plots=report(expand("{analysis_dir}/results/plots/macs2_broad/fdr{{fdr}}/enrichment_analysis/{{bg_sample}}/{db}.pdf", db=DBS), caption="../report/enrichment_analysis.rst", category="Pathway enrichment analysis"),
                 params:
                     terms=config["consensus_peaks"]["enrichment_analysis"]["terms"],
                     dirname=lambda w, output: os.path.dirname(output[0]),
@@ -415,7 +413,7 @@ if config["peak_calling_macs2"]["run"]:
                 resources:
                     runtime=config["resources"]["plotting"]["time"]
                 log:
-                    "logs/plot_enrichment/macs2_broad/fdr{fdr}/{bg_sample}.log"
+                    "{analysis_dir}/logs/plot_enrichment/macs2_broad/fdr{fdr}/{bg_sample}.log"
                 conda:
                     "../envs/R.yaml"
                 script:
@@ -425,18 +423,18 @@ if config["peak_calling_macs2"]["run"]:
         rule count_reads_in_peaks_macs2_broad:
         # Adapted from https://www.biostars.org/p/337872/#337890
             input:
-                bam="results/bam/{dir}/{bg_sample}.bam",
-                b="results/macs2_broad/fdr{fdr}/{dir}/{bg_sample}_peaks.broadPeak",
+                bam="{analysis_dir}/results/bam/{dir}/{bg_sample}.bam",
+                b="{analysis_dir}/results/macs2_broad/fdr{fdr}/{dir}/{bg_sample}_peaks.broadPeak",
             output:
-                total_read_count="results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count",
-                peak_read_count="results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count",
+                total_read_count="{analysis_dir}/results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count",
+                peak_read_count="{analysis_dir}/results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count",
             params:
                 extra="",
             threads: config["resources"]["deeptools"]["cpu"]
             resources:
                 runtime=config["resources"]["deeptools"]["time"]
             log:
-                "logs/bedtools_intersect/fdr{fdr}/{dir}/{bg_sample}.log"
+                "{analysis_dir}/logs/bedtools_intersect/fdr{fdr}/{dir}/{bg_sample}.log"
             conda:
                 "../envs/peak_calling.yaml"
             shell:
@@ -458,18 +456,18 @@ if config["peak_calling_macs2"]["run"]:
 
         rule plot_fraction_of_reads_in_peaks_macs2_broad:
             input:
-                total_read_count=expand("results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
-                peak_read_count=expand("results/macs2_broad/fdr{fdr}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, fdr=fdr, bg_sample=BG_SAMPLES),
+                total_read_count=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/read_counts/{dir}/{bg_sample}.total.count", dir=DIRS, bg_sample=BG_SAMPLES),
+                peak_read_count=expand("{{analysis_dir}}/results/macs2_broad/fdr{{fdr}}/read_counts/{dir}/{bg_sample}.peak.count", dir=DIRS, bg_sample=BG_SAMPLES),
             output:
-                plot=report("results/plots/macs2_broad/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
-                csv="results/macs2_broad/fdr{fdr}/frip.csv",
+                plot=report("{analysis_dir}/results/plots/macs2_broad/fdr{fdr}/frip.pdf", caption="../report/frip.rst", category="Fraction of reads in peaks"),
+                csv="{analysis_dir}/results/macs2_broad/fdr{fdr}/frip.csv",
             params:
                 extra="",
             threads: config["resources"]["plotting"]["cpu"]
             resources:
                 runtime=config["resources"]["plotting"]["time"]
             log:
-                "logs/plot_frip/fdr{fdr}.log"
+                "{analysis_dir}/logs/plot_frip/fdr{fdr}.log"
             conda:
                 "../envs/R.yaml"
             script:
