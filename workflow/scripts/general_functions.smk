@@ -113,7 +113,7 @@ def matrix_samples():
                 for f in l:
                     dest = re.sub(r"_\d{1,2}_R", "_R", f)
                     dest = f"{dir_}/{os.path.basename(dest)}"
-                    shell(f"ln -s {os.path.join(reads_dir, f)} {dest}")
+                    shell(f"ln -rs {os.path.join(reads_dir, f)} {dest}")
             return log
     
         # Get all R1 files in reads/
