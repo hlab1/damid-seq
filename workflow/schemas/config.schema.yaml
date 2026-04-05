@@ -1,3 +1,4 @@
+
 $schema: "http://json-schema.org/draft-06/schema#"
 
 description: Snakemake configuration file
@@ -126,6 +127,9 @@ properties:
         type: number
         minimum: 0
         maximum: 1
+      frac:
+        type: integer
+        minimum: 1
       min_count:
         type: integer
         minimum: 1

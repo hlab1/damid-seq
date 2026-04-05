@@ -11,7 +11,7 @@ if config["peak_calling_perl"]["run"]:
             outdir=lambda w, output: os.path.dirname(output["gff"]),
             n=config["peak_calling_perl"]["iterations"],
             fdr=config["peak_calling_perl"]["fdr"],
-            frac=config["peak_calling_perl"]["fraction"],
+            frac=config["peak_calling_perl"]["frac"],
             mc=config["peak_calling_perl"]["min_count"],
             mq=config["peak_calling_perl"]["min_quantile"],
             step=config["peak_calling_perl"]["step"],
