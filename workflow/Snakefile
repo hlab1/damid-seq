@@ -18,12 +18,11 @@ logger.info(f"Workflow version: {VERSION}")
 logger.info(f"Wrapper version: {wrapper_version}")
 
 # Define Docker container for Apptainer usage
-containerized: f"docker://niekwit/damid-seq:{VERSION}"
+containerized: "/scratch/weh6454/apptainer-cache/5ddb224b3789f7fc2454abe59ebac1cc.simg"
 
 # Load and validate config file
 configfile: "config/config.yaml"
 validate(config, "schemas/config.schema.yaml")
-check_consensus_peak_settings()
 
 plasmid_name = plasmid_fasta_name(config["plasmid_fasta"])
 
@@ -42,6 +41,7 @@ maskedgenes = masked_genes()
 # Get data type
 if data_type() == "matrix":
     matrix_samples()
+check_consensus_peak_settings()
 
 # Wildcard values
 DIRS = dirs()
