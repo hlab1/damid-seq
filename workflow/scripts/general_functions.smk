@@ -92,7 +92,7 @@ def matrix_samples():
     logger.info("Matrix samples detected...")
     logger.info("Preparing directory structure for all combinations of Dam controls vs Dam-fusion(s)...")
     
-    cwd = os.getcwd()
+    reads_dir = config['reads_dir']
 
     if paired_end:
         def symlink_files(list_):
@@ -103,7 +103,7 @@ def matrix_samples():
             """
             log = []
             for i, l in enumerate(list_):
-                dir_ = f"{config['reads_dir']}/repl_{i + 1}"
+                dir_ = f"{reads_dir}/repl_{i + 1}"
                 os.makedirs(dir_, exist_ok=True)
                 
                 # Keep log of what goes where
@@ -112,15 +112,15 @@ def matrix_samples():
                 log.append(tmp)
                 for f in l:
                     dest = re.sub(r"_\d{1,2}_R", "_R", f)
-                    dest = f"{cwd}/{dir_}/{os.path.basename(dest)}"
-                    shell(f"ln -s {os.path.join(cwd, f)} {dest}")
+                    dest = f"{dir_}/{os.path.basename(dest)}"
+                    shell(f"ln -s {os.path.join(reads_dir, f)} {dest}")
             return log
     
         # Get all R1 files in reads/
-        r1 = glob.glob(f"{config['reads_dir']}/*_R1_001.fastq.gz")
+        r1 = glob.glob(f"{reads_dir}/*_R1_001.fastq.gz")
 
         # Get all R1 Dam only files in reads/
-        dam = glob.glob(f"{config['reads_dir']}/*Dam*_R1_001.fastq.gz")
+        dam = glob.glob(f"{reads_dir}/*Dam*_R1_001.fastq.gz")
 
         # Get all R1 Dam-POI files in reads/
         fusion = [f for f in r1 if f not in dam]
@@ -165,10 +165,11 @@ def matrix_samples():
         df["read2"] = log_r2
 
         # Save log data to csv
-        df.to_csv(f"{config['reads_dir']}/sample_matrix.csv", index=False)
+        df.to_csv(f"{reads_dir}/sample_matrix.csv", index=False)
     else:
-        r1 = glob.glob(f"{config['reads_dir']}/*.fastq.gz")
-
+        r1_fullpath = glob.glob(f"{config['reads_dir']}/*.fastq.gz")
+        r1 = [os.path.basename(f) for f in r1_fullpath]
+        
         # Get all R1 Dam only files in reads/
         dam = [f for f in r1 if "Dam" in f]
         
@@ -178,13 +179,18 @@ def matrix_samples():
         # Get base names of all fusion R1 files
         fusion_base_names = list(set([re.sub("_[0-9]{1,2}.fastq.gz", "", os.path.basename(f)) for f in fusion]))
 
+        print(r1)
+        print(dam)
+        print(fusion)
+        print(fusion_base_names)
+
         # For each base name match each replicate read file into nested list
         base_replicates = []
         for base in fusion_base_names:
             tmp = [f for f in fusion if base in f]
             tmp.sort()
             base_replicates.append(tmp)
-        
+
         # Check if each nested list has the same length
         if len(set([len(l) for l in base_replicates])) != 1:
             raise ValueError("Number of Dam-POI replicates does not match...")
@@ -204,7 +210,7 @@ def matrix_samples():
                 """
                 log = []
                 for i, l in enumerate(list_):
-                    dir_ = f"{config['reads_dir']}/repl_{i + 1}"
+                    dir_ = f"{reads_dir}/repl_{i + 1}"
                     os.makedirs(dir_, exist_ok=True)
                     
                     # Keep log of what goes where
@@ -213,8 +219,8 @@ def matrix_samples():
                     log.append(tmp)
                     for f in l:
                         dest = re.sub(r"_\d{1,2}", "", f)
-                        dest = f"{cwd}/{dir_}/{os.path.basename(dest)}"
-                        shell(f"ln -s {os.path.join(cwd, f)} {dest}")
+                        dest = f"{dir_}/{os.path.basename(dest)}"
+                        shell(f"ln -rs {os.path.join(reads_dir, f)} {dest}")
                 return log
 
         log_symlink = symlink_files(matched_samples)
