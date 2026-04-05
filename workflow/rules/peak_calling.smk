@@ -34,7 +34,7 @@ if config["peak_calling_macs2"]["run"]:
             input:
                 bam="results/bam/{dir}/{bg_sample}.bam",
             output:
-                multiext("results/macs2_broad/fdr{fdr}/{dir}/{bg_sample}",
+                multiext("results/macs2_narrow/fdr{fdr}/{dir}/{bg_sample}",
                         "_peaks.xls",
                         "_peaks.narrowPeak",
                         "_summits.bed"
