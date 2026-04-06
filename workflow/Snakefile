@@ -23,11 +23,13 @@ containerized: "/scratch/weh6454/apptainer-cache/5ddb224b3789f7fc2454abe59ebac1c
 # Load and validate config file
 configfile: "config/config.yaml"
 validate(config, "schemas/config.schema.yaml")
+samples_csv = config['samples_csv']
+analysis_dir = config['analysis_dir']
 
 plasmid_name = plasmid_fasta_name(config["plasmid_fasta"])
 
 # Load sample information
-csv = pd.read_csv("config/samples.csv")
+csv = pd.read_csv(samples_csv)
 
 # Load genome resources to be used in rules
 resources = Resources(config["genome"], config["ensembl_genome_build"])
@@ -70,12 +72,12 @@ rule all:
 
 rule print_info:
     run:
-        print(data_type())
+        print(targets())
 
 # Save snakemake terminal output to log file
 time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-snake_log = f"logs/snakemake/{time}_snakemake.log"
-os.makedirs("logs/snakemake", exist_ok=True)
+snake_log = f"{analysis_dir}/logs/snakemake/{time}_snakemake.log"
+os.makedirs(f"{analysis_dir}/logs/snakemake", exist_ok=True)
 
 onsuccess: 
     shell("cp -v {log} {snake_log}")
