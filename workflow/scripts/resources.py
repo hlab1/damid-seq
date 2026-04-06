@@ -12,6 +12,7 @@ class Resources:
                 
         # base URLs
         base_url_ens = f"https://ftp.ensembl.org/pub/release-{build}/"
+        base_url_ensplants = f"https://ftp.ebi.ac.uk/ensemblgenomes/pub/release-{build}/plants/"
                 
         if "hg" in genome:
             if genome == "hg19":
@@ -38,7 +39,14 @@ class Resources:
                 name = "BDGP6.46"
 
             self.fasta_url = f"{base_url_ens}fasta/drosophila_melanogaster/dna/Drosophila_melanogaster.{name}.dna.toplevel.fa.gz"
-            self.gtf_url = f"{base_url_ens}gtf/drosophila_melanogaster/Drosophila_melanogaster.{name}.{build}.gtf.gz" 
+            self.gtf_url = f"{base_url_ens}gtf/drosophila_melanogaster/Drosophila_melanogaster.{name}.{build}.gtf.gz"
+
+        elif "tair" in genome:
+            if genome == "tair10":
+                name = "TAIR10"
+                
+            self.fasta_url = f"{base_url_ensplants}fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.{name}.dna.toplevel.fa.gz"
+            self.gtf_url = f"{base_url_ensplants}gtf/arabidopsis_thaliana/Arabidopsis_thaliana.{name}.{build}.gtf.gz"
         
         # downloaded unzipped file names
         self.fasta = self._file_from_url(self.fasta_url)
