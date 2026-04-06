@@ -45,14 +45,17 @@ rule install_damidseq_pipeline_software:
         "{output} > {log} 2>&1"
 
 
-use rule install_damidseq_pipeline_software as install_find_peak_software with:
+rule install_find_peak_software:
     output:
         directory("resources/find_peaks"),
     params:
         url="https://github.com/owenjm/find_peaks.git",
-        version=""
+        version="2259915d08c7d5ab0151d7b15e2292603d7a05c7"
     log:
         "logs/resources/install_find_peaks_software.log"
+    shell:
+        "git clone {params.url} {output} > {log} 2>&1; "
+        "cd {output}; git checkout {params.version} >> ../../{log} 2>&1 " 
 
 
 rule create_annotation_file:
