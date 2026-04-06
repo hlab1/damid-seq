@@ -77,7 +77,7 @@ def data_type():
     If they do match, each biological replicate will be in a separate subdirectory in reads/.
     """
     # Check if any subdirectories exist in reads/
-    subdirs = glob.glob(f"{config['reads_dir']}/*/*")
+    subdirs = glob.glob(f"{config['analysis_dir']}/reads/*/*")
     if len(subdirs) == 0:
         return "matrix"
     else:
@@ -93,7 +93,7 @@ def matrix_samples():
     logger.info("Matrix samples detected...")
     logger.info("Preparing directory structure for all combinations of Dam controls vs Dam-fusion(s)...")
     
-    reads_dir = config['reads_dir']
+    analysis_dir = config['analysis_dir']
 
     if paired_end:
         def symlink_files(list_):
@@ -104,7 +104,7 @@ def matrix_samples():
             """
             log = []
             for i, l in enumerate(list_):
-                dir_ = f"{reads_dir}/repl_{i + 1}"
+                dir_ = f"{analysis_dir}/reads/repl_{i + 1}"
                 os.makedirs(dir_, exist_ok=True)
                 
                 # Keep log of what goes where
@@ -114,14 +114,14 @@ def matrix_samples():
                 for f in l:
                     dest = re.sub(r"_\d{1,2}_R", "_R", f)
                     dest = f"{dir_}/{os.path.basename(dest)}"
-                    shell(f"ln -rs {os.path.join(reads_dir, f)} {dest}")
+                    shell(f"ln -rs {os.path.join(analysis_dir, 'reads',f)} {dest}")
             return log
     
         # Get all R1 files in reads/
-        r1 = glob.glob(f"{reads_dir}/*_R1_001.fastq.gz")
+        r1 = glob.glob(f"{analysis_dir}/reads/*_R1_001.fastq.gz")
 
         # Get all R1 Dam only files in reads/
-        dam = glob.glob(f"{reads_dir}/*Dam*_R1_001.fastq.gz")
+        dam = glob.glob(f"{analysis_dir}/reads/*Dam*_R1_001.fastq.gz")
 
         # Get all R1 Dam-POI files in reads/
         fusion = [f for f in r1 if f not in dam]
@@ -166,7 +166,7 @@ def matrix_samples():
         df["read2"] = log_r2
 
         # Save log data to csv
-        df.to_csv(f"{reads_dir}/sample_matrix.csv", index=False)
+        df.to_csv(f"{analysis_dir}/reads/sample_matrix.csv", index=False)
     else:
         r1_fullpath = glob.glob(f"{config['analysis_dir']}/reads/*.fastq.gz")
         r1 = [os.path.basename(f) for f in r1_fullpath]
@@ -211,7 +211,7 @@ def matrix_samples():
                 """
                 log = []
                 for i, l in enumerate(list_):
-                    dir_ = f"{reads_dir}/repl_{i + 1}"
+                    dir_ = f"{analysis_dir}/reads/repl_{i + 1}"
                     os.makedirs(dir_, exist_ok=True)
                     
                     # Keep log of what goes where
@@ -221,7 +221,7 @@ def matrix_samples():
                     for f in l:
                         dest = re.sub(r"_\d{1,2}", "", f)
                         dest = f"{dir_}/{os.path.basename(dest)}"
-                        shell(f"ln -rs {os.path.join(reads_dir, f)} {dest}")
+                        shell(f"ln -rs {os.path.join(analysis_dir, 'reads', f)} {dest}")
                 return log
 
         log_symlink = symlink_files(matched_samples)
@@ -231,7 +231,7 @@ def matrix_samples():
         df["dir"] = log_symlink
         
         # Save log data to csv
-        df.to_csv(f"{config['analysis_dir']}/reads/sample_matrix.csv", index=False)
+        df.to_csv(f"{analysis_dir}/reads/sample_matrix.csv", index=False)
 
 
 def dirs():
