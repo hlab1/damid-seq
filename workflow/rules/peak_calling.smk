@@ -41,6 +41,7 @@ if config["peak_calling_macs2"]["run"]:
                         "_summits.bed"
                         )
             params:
+                samples_csv=config["samples_csv"],
                 outdir=lambda w, output: os.path.dirname(output[0]),
                 paired_end=paired_end,
                 mode="narrow",
@@ -228,7 +229,7 @@ if config["peak_calling_macs2"]["run"]:
                 "-b stdin | "
                 "awk '{{i+=$NF}}END{{print i}}' > "
                 "{output.peak_read_count} "
-                "{log}"
+                #"{log}"
             
 
         rule plot_fraction_of_reads_in_peaks_macs2_narrow:
@@ -263,6 +264,7 @@ if config["peak_calling_macs2"]["run"]:
                         "_peaks.gappedPeak"
                         )
             params:
+                samples_csv=config["samples_csv"],
                 outdir=lambda w, output: os.path.dirname(output[0]),
                 paired_end=paired_end,
                 mode="broad",

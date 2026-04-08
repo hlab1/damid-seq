@@ -40,9 +40,9 @@ def allfastq(directory):
 cwd = os.getcwd()
 
 # Load Snakemake variables
-results_dir = snakemake.params["results_dir"]
-logs_dir = snakemake.params["logs_dir"]
-trim_dir = snakemake.params["trim_dir"]
+results_dir = os.path.join(cwd,os.path.relpath(snakemake.params["results_dir"],cwd))
+logs_dir = os.path.join(cwd,os.path.relpath(snakemake.params["logs_dir"],cwd))
+trim_dir = snakemake.params["trim_dir"] # relative to results dir
 flags = snakemake.input["flag"]
 gatc = os.path.join(cwd, snakemake.input["gatc"])
 bowtie2_idx = os.path.join(cwd, snakemake.params["idxdir"])
@@ -124,10 +124,12 @@ for condition, dam_control in dam_controls.items():
 
     print("Moving output files from temporary directory to appropriate locations")
     # Move log file to logs directory
+    print(shell("ls pipeline-*.log"))
     target = f"{logs_dir}/damidseq_pipeline/{directory}"
     shell(
         "mv pipeline-*.log {target}"
         )
+    print(shell("ls {target}"))
 
     # Move bedgraph files to output directory
     move_files("bedgraph")
