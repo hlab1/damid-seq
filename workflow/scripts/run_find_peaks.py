@@ -21,9 +21,6 @@ cwd = os.getcwd()
 
 # Get arguments from snakemake
 find_peaks = f"{cwd}/{snakemake.input['fp']}/find_peaks"
-bedgraph = snakemake.input["bg"]
-gff = snakemake.output["gff"]
-data = snakemake.output["data"]
 fdr = snakemake.params["fdr"]
 frac = snakemake.params["frac"]
 min_count = snakemake.params["mc"]
@@ -32,7 +29,10 @@ n = snakemake.params["n"]
 step = snakemake.params["step"]
 up = snakemake.params["up"]
 outdir = snakemake.params["outdir"]
-log = snakemake.log[0]
+log = os.path.relpath(snakemake.log[0],outdir)
+bedgraph = os.path.relpath(snakemake.input["bg"],outdir)
+gff = os.path.relpath(snakemake.output["gff"],outdir)
+data = os.path.relpath(snakemake.output["data"],outdir)
 
 # Make and move to output dir
 os.makedirs(outdir, exist_ok=True)
@@ -55,9 +55,14 @@ shell(
     )
 
 # Locate GFF and data files and move to output dir (parent dir)
-gff_temp = glob.glob(f"{outdir}/peak_analysis.{sample}*/{sample}*.peaks.gff") # peak file
+print(os.getcwd())
+print(outdir)
+print(f"peak_analysis.{sample}*/{sample}*.peaks.gff")
+print(gff)
+gff_temp = glob.glob(f"peak_analysis.{sample}*/{sample}*.peaks.gff") # peak file
+print(gff_temp)
 assert len(gff_temp) == 1, "No or more than one gff file found"
-data_temp = glob.glob(f"{outdir}/peak_analysis.{sample}*/{sample}*-data") # data file
+data_temp = glob.glob(f"peak_analysis.{sample}*/{sample}*-data") # data file
 assert len(data_temp) == 1, "No or more than one data file found"
 
 # Rename and move files
