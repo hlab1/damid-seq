@@ -19,7 +19,7 @@ out_dir = snakemake.params["outdir"]
 name = re.sub(".bam$", "", os.path.basename(bam))
 
 # Load sample table
-csv = pd.read_csv("config/samples.csv")
+csv = pd.read_csv(snakemake.params["samples_csv"])
 
 # Check if treatment column contains any NaN values, if so replace with "none"
 if csv["treatment"].isnull().values.any():
@@ -52,6 +52,8 @@ elif "mm" in genome:
     genome = "mm"
 elif "dm" in genome:
     genome = "dm"
+elif "tair10" in genome:
+    genome = "1.2e8"
 
 if mode == "broad":
     broad = f"--broad --broad-cutoff {fdr} "
