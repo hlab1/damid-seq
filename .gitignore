@@ -1,6 +1,9 @@
 results/**
 resources/**
 logs/**
+workflow/logs/**
+workflow/resources/**
+workflow/slurm_logs/**
 .snakemake
 .snakemake/**
 
